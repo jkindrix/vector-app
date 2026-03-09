@@ -1,8 +1,8 @@
 # Stage 1: Install dependencies
 FROM node:18-alpine AS deps
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci --legacy-peer-deps
 
 # Stage 2: Build
 FROM node:18-alpine AS builder
