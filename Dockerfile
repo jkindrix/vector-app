@@ -25,9 +25,6 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Copy migrations
-COPY server/migrations ./migrations
-
 # Create content directory
 RUN mkdir -p /app/content && chown nextjs:nodejs /app/content
 

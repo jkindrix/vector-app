@@ -9,6 +9,7 @@ interface SearchResult {
 }
 
 let pool: Pool | null = null;
+let initialized = false;
 
 function getPool(): Pool {
   if (!pool) {
@@ -28,6 +29,12 @@ function getPool(): Pool {
     });
   }
   return pool;
+}
+
+export async function ensureInitialized() {
+  if (initialized) return;
+  await initializeDatabase();
+  initialized = true;
 }
 
 export async function initializeDatabase() {
@@ -104,6 +111,7 @@ export async function clearIndex() {
 }
 
 export async function searchContent(query: string, limit: number = 20, offset: number = 0): Promise<{ results: SearchResult[], total: number }> {
+  await ensureInitialized();
   const result = await getPool().query(
     `WITH matched AS (
       SELECT file_path, title, collection, content_text,

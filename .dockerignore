@@ -21,3 +21,10 @@ coverage
 build
 dist
 data/*.db
+.next
+src
+server
+playwright.config.ts
+backups
+.tmp
+content
