@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchContent } from '@/lib/database';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     const results = await searchContent(query, limit, offset);
     return NextResponse.json(results);
   } catch (error) {
-    console.error('Error searching:', error);
+    logger.error({ err: error }, 'Error searching');
     return NextResponse.json({ error: 'Failed to search content' }, { status: 500 });
   }
 }

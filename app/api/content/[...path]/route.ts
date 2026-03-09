@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getContent, writeContent, invalidateCache } from '@/lib/content';
 import { indexFile } from '@/lib/database';
 import { getSessionUser } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   try {
@@ -15,7 +16,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       headers: { 'Cache-Control': 'public, max-age=60' },
     });
   } catch (error) {
-    console.error('Error fetching content:', error);
+    logger.error({ err: error }, 'Error fetching content');
     return NextResponse.json({ error: 'Failed to fetch content' }, { status: 500 });
   }
 }
@@ -42,7 +43,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating content:', error);
+    logger.error({ err: error }, 'Error updating content');
     return NextResponse.json({ error: 'Failed to update content' }, { status: 500 });
   }
 }

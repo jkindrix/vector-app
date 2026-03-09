@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
 import { clearIndex, indexFile } from '@/lib/database';
 import { getAllFiles, getContent } from '@/lib/content';
+import { logger } from '@/lib/logger';
 
 export async function POST() {
   const user = await getSessionUser();
@@ -26,7 +27,7 @@ export async function POST() {
 
     return NextResponse.json({ indexed: count });
   } catch (error) {
-    console.error('Error reindexing:', error);
+    logger.error({ err: error }, 'Error reindexing');
     return NextResponse.json({ error: 'Failed to reindex' }, { status: 500 });
   }
 }

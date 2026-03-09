@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getTree } from '@/lib/content';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -8,7 +9,7 @@ export async function GET() {
       headers: { 'Cache-Control': 'public, max-age=60' },
     });
   } catch (error) {
-    console.error('Error fetching tree:', error);
+    logger.error({ err: error }, 'Error fetching tree');
     return NextResponse.json({ error: 'Failed to fetch content tree' }, { status: 500 });
   }
 }

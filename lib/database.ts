@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
+import { logger } from './logger';
 
 interface SearchResult {
   file_path: string;
@@ -25,7 +26,7 @@ function getPool(): Pool {
     });
 
     pool.on('error', (err: Error) => {
-      console.error('Unexpected database error:', err);
+      logger.error({ err }, 'Unexpected database error');
     });
   }
   return pool;
@@ -82,15 +83,12 @@ export async function initializeDatabase() {
       const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD;
       if (defaultPassword) {
         const hash = await bcrypt.hash(defaultPassword, 12);
-        await client.query(
-          'INSERT INTO admin_users (username, password_hash) VALUES ($1, $2)',
-          ['admin', hash]
-        );
-        console.log('Default admin user created');
+        await client.query('INSERT INTO admin_users (username, password_hash) VALUES ($1, $2)', ['admin', hash]);
+        logger.info('Default admin user created');
       }
     }
 
-    console.log('Database initialized');
+    logger.info('Database initialized');
   } finally {
     client.release();
   }
@@ -102,7 +100,7 @@ export async function indexFile(filePath: string, title: string, contentText: st
      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
      ON CONFLICT (file_path) DO UPDATE
      SET title = $2, content_text = $3, collection = $4, last_indexed = CURRENT_TIMESTAMP`,
-    [filePath, title, contentText, collection]
+    [filePath, title, contentText, collection],
   );
 }
 
@@ -110,7 +108,11 @@ export async function clearIndex() {
   await getPool().query('TRUNCATE search_index');
 }
 
-export async function searchContent(query: string, limit: number = 20, offset: number = 0): Promise<{ results: SearchResult[], total: number }> {
+export async function searchContent(
+  query: string,
+  limit: number = 20,
+  offset: number = 0,
+): Promise<{ results: SearchResult[]; total: number }> {
   await ensureInitialized();
   const result = await getPool().query(
     `WITH matched AS (
@@ -126,7 +128,7 @@ export async function searchContent(query: string, limit: number = 20, offset: n
     FROM matched
     ORDER BY rank DESC
     LIMIT $2 OFFSET $3`,
-    [query, limit, offset]
+    [query, limit, offset],
   );
 
   const total = result.rows.length > 0 ? parseInt(result.rows[0].total) : 0;
@@ -136,7 +138,7 @@ export async function searchContent(query: string, limit: number = 20, offset: n
 export async function getAdminUser(username: string) {
   const result = await getPool().query(
     'SELECT id, username, password_hash, created_at FROM admin_users WHERE username = $1',
-    [username]
+    [username],
   );
   return result.rows[0] || null;
 }
@@ -145,7 +147,7 @@ export async function updateAdminPassword(username: string, newPassword: string)
   const hash = await bcrypt.hash(newPassword, 12);
   const result = await getPool().query(
     'UPDATE admin_users SET password_hash = $1 WHERE username = $2 RETURNING id, username',
-    [hash, username]
+    [hash, username],
   );
   if (result.rows.length === 0) throw new Error('Admin user not found');
   return result.rows[0];
