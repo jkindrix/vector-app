@@ -28,7 +28,7 @@ export function Header() {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setSearchOpen(prev => !prev);
+        setSearchOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -38,7 +38,7 @@ export function Header() {
   return (
     <>
       <header className="border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="text-lg font-semibold text-gray-900 dark:text-white">
             Vector
           </Link>

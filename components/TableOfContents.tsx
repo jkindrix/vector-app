@@ -42,7 +42,7 @@ export function TableOfContents({ headings, activeId }: { headings: TocEntry[]; 
           <li key={h.id}>
             <a
               href={`#${h.id}`}
-              className={`block text-xs py-1 transition-colors ${
+              className={`block text-xs py-1.5 transition-colors ${
                 h.level === 3 ? 'pl-3' : h.level === 4 ? 'pl-6' : ''
               } ${
                 activeId === h.id

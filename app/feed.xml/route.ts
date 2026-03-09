@@ -1,48 +1,59 @@
 import { getAllFiles, getContent } from '@/lib/content';
 
-const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://vector.jdok.dev';
+export const revalidate = 3600;
+
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
 
 export async function GET() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://vector.jdok.dev';
   const files = await getAllFiles();
-  const items: { title: string; path: string; date: string; description: string }[] = [];
 
-  for (const file of files) {
-    const doc = await getContent(file.replace(/\.md$/, ''));
-    if (doc) {
-      items.push({
-        title: doc.title,
-        path: file.replace(/\.md$/, ''),
-        date: doc.lastModified || new Date().toISOString(),
-        description: doc.markdown
-          .replace(/[#*_`~\[\]()>!|-]/g, '')
-          .replace(/\n+/g, ' ')
-          .trim()
-          .slice(0, 200),
-      });
-    }
+  const items: { title: string; path: string; lastModified: string; description: string }[] = [];
+
+  for (const file of files.slice(0, 50)) {
+    const path = file.replace(/\.md$/, '');
+    const doc = await getContent(path);
+    if (!doc) continue;
+    items.push({
+      title: doc.title,
+      path,
+      lastModified: doc.lastModified || new Date().toISOString(),
+      description: doc.markdown
+        .replace(/[#*_`~\[\]()>!|-]/g, '')
+        .replace(/\n+/g, ' ')
+        .trim()
+        .slice(0, 200),
+    });
   }
 
-  items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  items.sort((a, b) => b.lastModified.localeCompare(a.lastModified));
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Vector</title>
-    <link>${SITE_URL}</link>
-    <description>Research papers, frameworks, and references.</description>
+    <link>${baseUrl}</link>
+    <description>Research papers, frameworks, and references</description>
     <language>en-us</language>
-    <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml"/>
-${items
-  .map(
-    (item) => `    <item>
+    <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml"/>
+    ${items
+      .map(
+        (item) => `<item>
       <title>${escapeXml(item.title)}</title>
-      <link>${SITE_URL}/${item.path}</link>
-      <guid>${SITE_URL}/${item.path}</guid>
-      <pubDate>${new Date(item.date).toUTCString()}</pubDate>
+      <link>${baseUrl}/${item.path}</link>
+      <guid>${baseUrl}/${item.path}</guid>
+      <pubDate>${new Date(item.lastModified).toUTCString()}</pubDate>
       <description>${escapeXml(item.description)}</description>
     </item>`,
-  )
-  .join('\n')}
+      )
+      .join('\n    ')}
   </channel>
 </rss>`;
 
@@ -52,8 +63,4 @@ ${items
       'Cache-Control': 'public, max-age=3600',
     },
   });
-}
-
-function escapeXml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

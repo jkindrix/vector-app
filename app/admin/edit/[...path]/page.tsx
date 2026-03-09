@@ -99,39 +99,98 @@ export default function AdminEditor() {
   const [loading, setLoading] = useState(true);
   const [dirty, setDirty] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const uploadFile = useCallback(async (file: File) => {
+    setUploading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      const ta = textareaRef.current;
+      if (ta) {
+        ta.focus();
+        const imgMarkdown = `![${file.name}](${data.path})`;
+        document.execCommand('insertText', false, imgMarkdown);
+        setMarkdown(ta.value);
+        setDirty(true);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  }, []);
+
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) uploadFile(file);
+          return;
+        }
+      }
+    },
+    [uploadFile],
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      const files = e.dataTransfer?.files;
+      if (!files?.length) return;
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        e.preventDefault();
+        uploadFile(file);
+      }
+    },
+    [uploadFile],
+  );
 
   const insertMarkdown = useCallback(
     (before: string, after: string = '', defaultText: string = '', blockLevel: boolean = false) => {
       const ta = textareaRef.current;
       if (!ta) return;
+      ta.focus();
       const start = ta.selectionStart;
       const end = ta.selectionEnd;
-      const selected = markdown.substring(start, end);
+      const selected = ta.value.substring(start, end);
       const text = selected || defaultText;
 
-      let insert: string, cursorStart: number, cursorEnd: number;
+      let insert: string;
       if (blockLevel) {
-        const prefix = start > 0 && markdown[start - 1] !== '\n' ? '\n' : '';
-        const suffix = end < markdown.length && markdown[end] !== '\n' ? '\n' : '';
+        const prefix = start > 0 && ta.value[start - 1] !== '\n' ? '\n' : '';
+        const suffix = end < ta.value.length && ta.value[end] !== '\n' ? '\n' : '';
         insert = `${prefix}${before}${text}${after}${suffix}`;
-        cursorStart = start + prefix.length + before.length;
-        cursorEnd = cursorStart + text.length;
       } else {
         insert = `${before}${text}${after}`;
-        cursorStart = start + before.length;
-        cursorEnd = cursorStart + text.length;
       }
 
-      const newMarkdown = markdown.substring(0, start) + insert + markdown.substring(end);
-      setMarkdown(newMarkdown);
+      // Use execCommand to preserve browser undo history
+      ta.setSelectionRange(start, end);
+      document.execCommand('insertText', false, insert);
+
+      // Sync React state from the DOM (execCommand modifies the DOM directly)
+      setMarkdown(ta.value);
       setDirty(true);
+
+      const cursorStart = blockLevel
+        ? start + (start > 0 && ta.value[start - 1] !== '\n' ? 1 : 0) + before.length
+        : start + before.length;
+      const cursorEnd = cursorStart + text.length;
       requestAnimationFrame(() => {
-        ta.focus();
         ta.setSelectionRange(cursorStart, cursorEnd);
       });
     },
-    [markdown],
+    [],
   );
 
   useEffect(() => {
@@ -299,6 +358,12 @@ export default function AdminEditor() {
         </div>
       )}
 
+      {uploading && (
+        <div className="px-4 lg:px-6 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+          <p className="text-sm text-blue-600 dark:text-blue-400">Uploading image...</p>
+        </div>
+      )}
+
       {error && (
         <div className="px-4 lg:px-6 py-2 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
@@ -314,6 +379,9 @@ export default function AdminEditor() {
               setMarkdown(e.target.value);
               setDirty(true);
             }}
+            onPaste={handlePaste}
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
             placeholder="Write markdown..."
             className={`${viewMode === 'split' ? 'w-1/2 border-r border-gray-200 dark:border-gray-700' : 'w-full'} h-full min-h-[60vh] p-6 bg-white dark:bg-gray-950 text-gray-900 dark:text-white font-mono text-sm focus:outline-none resize-none`}
           />

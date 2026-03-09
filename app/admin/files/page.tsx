@@ -27,8 +27,8 @@ function TreeItem({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
         </div>
         <Link
           href={`/admin/edit/${node.path}`}
-          className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-shrink-0"
-          title="Edit"
+          className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-shrink-0"
+          aria-label={`Edit ${node.displayName}`}
         >
           <Edit className="w-4 h-4" />
         </Link>
@@ -40,16 +40,22 @@ function TreeItem({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
     <div>
       <button
         onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
+        aria-label={`${expanded ? 'Collapse' : 'Expand'} ${node.displayName}`}
         className="flex items-center gap-2 py-1.5 px-2 w-full text-left hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
         style={{ paddingLeft: `${depth * 20 + 8}px` }}
       >
-        {expanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+        {expanded ? (
+          <ChevronDown className="w-4 h-4 text-gray-400" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+        )}
         <Folder className="w-4 h-4 text-blue-500" />
         <span className="text-sm font-medium text-gray-900 dark:text-white">{node.displayName}</span>
       </button>
-      {expanded && node.children && node.children.map(child => (
-        <TreeItem key={child.path} node={child} depth={depth + 1} />
-      ))}
+      {expanded &&
+        node.children &&
+        node.children.map((child) => <TreeItem key={child.path} node={child} depth={depth + 1} />)}
     </div>
   );
 }
@@ -61,7 +67,7 @@ export default function AdminFiles() {
 
   useEffect(() => {
     fetch('/api/tree')
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setTree)
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -69,9 +75,13 @@ export default function AdminFiles() {
 
   const handleReindex = async () => {
     setReindexing(true);
-    try { await fetch('/api/reindex', { method: 'POST' }); }
-    catch { alert('Reindex failed.'); }
-    finally { setReindexing(false); }
+    try {
+      await fetch('/api/reindex', { method: 'POST' });
+    } catch {
+      alert('Reindex failed.');
+    } finally {
+      setReindexing(false);
+    }
   };
 
   return (
@@ -90,7 +100,7 @@ export default function AdminFiles() {
 
       {loading ? (
         <div className="space-y-4">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div key={i} className="animate-pulse bg-white dark:bg-gray-900 rounded-lg p-4">
               <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-2" />
               <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
@@ -101,7 +111,11 @@ export default function AdminFiles() {
         <p className="text-gray-500 dark:text-gray-400 text-center py-12">No files found.</p>
       ) : (
         <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-2">
-          {tree.children ? tree.children.map(child => <TreeItem key={child.path} node={child} />) : <TreeItem node={tree} />}
+          {tree.children ? (
+            tree.children.map((child) => <TreeItem key={child.path} node={child} />)
+          ) : (
+            <TreeItem node={tree} />
+          )}
         </div>
       )}
     </>

@@ -67,7 +67,7 @@ export function MarkdownContent({ markdown }: { markdown: string }) {
       <div className="flex-1 min-w-0">
         {/* Mobile ToC */}
         {headings.length > 0 && (
-          <div className="xl:hidden mb-8">
+          <div className="lg:hidden mb-8">
             <button
               onClick={() => setTocOpen(!tocOpen)}
               className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 w-full hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -104,7 +104,7 @@ export function MarkdownContent({ markdown }: { markdown: string }) {
 
       {/* Desktop ToC */}
       {headings.length > 0 && (
-        <aside className="hidden xl:block w-56 shrink-0 pl-8">
+        <aside className="hidden lg:block w-56 shrink-0 pl-8">
           <div className="sticky top-8">
             <TableOfContents headings={headings} activeId={activeId} />
           </div>

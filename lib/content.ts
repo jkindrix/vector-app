@@ -15,6 +15,8 @@ export interface CollectionSummary {
   path: string;
   type: 'collection' | 'standalone';
   description?: string;
+  documentCount?: number;
+  lastModified?: string;
 }
 
 export interface DocumentContent {
@@ -33,7 +35,7 @@ function toDisplayName(filename: string): string {
   let name = filename.replace(/\.md$/i, '');
   name = name.replace(/^\d+[-_.]\s*/, '');
   name = name.replace(/[-_]/g, ' ');
-  return name.replace(/\b\w/g, c => c.toUpperCase());
+  return name.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function extractTitle(markdown: string): string | null {
@@ -250,21 +252,143 @@ export async function listCollections(): Promise<CollectionSummary[]> {
     try {
       const content = await readFile(join(CONTENT_DIR, name, 'README.md'), 'utf-8');
       description = extractDescription(content) || undefined;
-    } catch { /* no README */ }
-    results.push({ name, displayName: toDisplayName(name), path: name, type: 'collection', description });
+    } catch {
+      /* no README */
+    }
+    const dirFiles: string[] = [];
+    try {
+      await collectFiles(join(CONTENT_DIR, name), '', dirFiles);
+    } catch {
+      /* skip */
+    }
+    let latestMod = '';
+    for (const f of dirFiles.slice(0, 50)) {
+      try {
+        const s = await stat(join(CONTENT_DIR, name, f));
+        const mod = s.mtime.toISOString();
+        if (mod > latestMod) latestMod = mod;
+      } catch {
+        /* skip */
+      }
+    }
+    results.push({
+      name,
+      displayName: toDisplayName(name),
+      path: name,
+      type: 'collection',
+      description,
+      documentCount: dirFiles.length,
+      lastModified: latestMod || undefined,
+    });
   }
 
   for (const name of files) {
     let description: string | undefined;
+    let lastModified: string | undefined;
     try {
       const content = await readFile(join(CONTENT_DIR, name), 'utf-8');
       description = extractDescription(content) || undefined;
-    } catch { /* skip */ }
-    results.push({ name, displayName: toDisplayName(name), path: name.replace(/\.md$/i, ''), type: 'standalone', description });
+    } catch {
+      /* skip */
+    }
+    try {
+      const s = await stat(join(CONTENT_DIR, name));
+      lastModified = s.mtime.toISOString();
+    } catch {
+      /* skip */
+    }
+    results.push({
+      name,
+      displayName: toDisplayName(name),
+      path: name.replace(/\.md$/i, ''),
+      type: 'standalone',
+      description,
+      documentCount: 1,
+      lastModified,
+    });
   }
 
   setCache('collections', results);
   return results;
+}
+
+export interface CollectionInfo {
+  name: string;
+  displayName: string;
+  path: string;
+  description?: string;
+  documentCount: number;
+  lastModified: string;
+  documents: { displayName: string; path: string; lastModified: string }[];
+}
+
+export async function getCollectionInfo(relativePath: string): Promise<CollectionInfo | null> {
+  if (!isPathSafe(relativePath)) return null;
+
+  const fullPath = resolve(CONTENT_DIR, relativePath);
+  try {
+    const s = await stat(fullPath);
+    if (!s.isDirectory()) return null;
+  } catch {
+    return null;
+  }
+
+  const tree = await getTree();
+  const parts = relativePath.split('/').filter(Boolean);
+  let node: TreeNode | undefined = tree;
+  for (const part of parts) {
+    node = node?.children?.find((c) => c.name === part);
+    if (!node) return null;
+  }
+
+  // Extract description from README.md if it exists
+  let description: string | undefined;
+  try {
+    const readme = await readFile(join(fullPath, 'README.md'), 'utf-8');
+    description = extractDescription(readme) || undefined;
+  } catch {
+    /* no README */
+  }
+
+  // Flatten all file nodes
+  const docs: CollectionInfo['documents'] = [];
+  async function collectDocs(n: TreeNode) {
+    if (n.type === 'file') {
+      let lastMod = '';
+      try {
+        let fp = resolve(CONTENT_DIR, n.path + '.md');
+        const s = await stat(fp);
+        lastMod = s.mtime.toISOString();
+      } catch {
+        try {
+          const fp = resolve(CONTENT_DIR, n.path);
+          const s = await stat(fp);
+          lastMod = s.mtime.toISOString();
+        } catch {
+          /* skip */
+        }
+      }
+      docs.push({ displayName: n.displayName, path: n.path, lastModified: lastMod });
+    }
+    if (n.children) {
+      for (const child of n.children) await collectDocs(child);
+    }
+  }
+  if (node.children) {
+    for (const child of node.children) await collectDocs(child);
+  }
+
+  const lastModified = docs.reduce((latest, d) => (d.lastModified > latest ? d.lastModified : latest), '');
+
+  return {
+    name: node.name,
+    displayName: node.displayName,
+    path: relativePath,
+    description,
+    documentCount: docs.length,
+    lastModified,
+    documents: docs,
+  };
 }
 
 export async function getAllFiles(): Promise<string[]> {

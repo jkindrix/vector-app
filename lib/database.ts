@@ -68,6 +68,17 @@ export async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_search_collection ON search_index(collection)
     `);
 
+    // Enable pg_trgm for fuzzy/typo-tolerant search fallback
+    await client.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_search_trgm_title
+        ON search_index USING gin(title gin_trgm_ops)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_search_trgm_content
+        ON search_index USING gin(content_text gin_trgm_ops)
+    `);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS admin_users (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -108,13 +119,20 @@ export async function clearIndex() {
   await getPool().query('TRUNCATE search_index');
 }
 
+function sanitizeSnippet(html: string): string {
+  // Strip all HTML except <mark> and </mark> from ts_headline output
+  return html.replace(/<\/?(?!mark\b)[^>]+>/gi, '');
+}
+
 export async function searchContent(
   query: string,
   limit: number = 20,
   offset: number = 0,
 ): Promise<{ results: SearchResult[]; total: number }> {
   await ensureInitialized();
-  const result = await getPool().query(
+
+  // Try full-text search first
+  const ftsResult = await getPool().query(
     `WITH matched AS (
       SELECT file_path, title, collection, content_text,
         ts_rank(to_tsvector('english', COALESCE(title, '') || ' ' || COALESCE(content_text, '')), plainto_tsquery('english', $1)) AS rank,
@@ -131,8 +149,41 @@ export async function searchContent(
     [query, limit, offset],
   );
 
-  const total = result.rows.length > 0 ? parseInt(result.rows[0].total) : 0;
-  return { results: result.rows.map(({ total: _, ...row }) => row), total };
+  if (ftsResult.rows.length > 0) {
+    const total = parseInt(ftsResult.rows[0].total);
+    return {
+      results: ftsResult.rows.map(({ total: _, ...row }) => ({
+        ...row,
+        snippet: row.snippet ? sanitizeSnippet(row.snippet) : '',
+      })),
+      total,
+    };
+  }
+
+  // Fallback: fuzzy search using pg_trgm trigram similarity
+  const fuzzyResult = await getPool().query(
+    `WITH matched AS (
+      SELECT file_path, title, collection,
+        GREATEST(
+          similarity(COALESCE(title, ''), $1),
+          similarity(COALESCE(content_text, ''), $1)
+        ) AS sim,
+        COUNT(*) OVER() AS total
+      FROM search_index
+      WHERE COALESCE(title, '') % $1 OR COALESCE(content_text, '') % $1
+    )
+    SELECT file_path, title, collection, total, '' as snippet
+    FROM matched
+    ORDER BY sim DESC
+    LIMIT $2 OFFSET $3`,
+    [query, limit, offset],
+  );
+
+  const total = fuzzyResult.rows.length > 0 ? parseInt(fuzzyResult.rows[0].total) : 0;
+  return {
+    results: fuzzyResult.rows.map(({ total: _, ...row }) => row),
+    total,
+  };
 }
 
 export async function getAdminUser(username: string) {

@@ -4,6 +4,8 @@ import { listCollections } from '@/lib/content';
 import type { CollectionSummary } from '@/lib/content';
 import { Header } from '@/components/Header';
 
+export const revalidate = 60;
+
 function CollectionCard({ item }: { item: CollectionSummary }) {
   const isCollection = item.type === 'collection';
 
@@ -12,27 +14,47 @@ function CollectionCard({ item }: { item: CollectionSummary }) {
       <article className="border border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
-            <div className={`mt-0.5 p-2 rounded-lg shrink-0 ${
-              isCollection
-                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-            }`}>
+            <div
+              className={`mt-0.5 p-2 rounded-lg shrink-0 ${
+                isCollection
+                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+              }`}
+            >
               {isCollection ? <Library className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
             </div>
             <div className="min-w-0">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 {item.displayName}
               </h2>
-              <span className={`inline-block text-xs px-1.5 py-0.5 rounded mt-1 ${
-                isCollection
-                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-              }`}>
-                {isCollection ? 'Collection' : 'Standalone'}
+              <span
+                className={`inline-block text-xs px-1.5 py-0.5 rounded mt-1 ${
+                  isCollection
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {isCollection ? 'Collection' : 'Document'}
               </span>
               {item.description && (
                 <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mt-2 line-clamp-3">
                   {item.description}
+                </p>
+              )}
+              {(item.documentCount || item.lastModified) && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                  {item.documentCount && item.documentCount > 1 && <span>{item.documentCount} documents</span>}
+                  {item.documentCount && item.documentCount > 1 && item.lastModified && <span> &middot; </span>}
+                  {item.lastModified && (
+                    <span>
+                      Updated{' '}
+                      {new Date(item.lastModified).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  )}
                 </p>
               )}
             </div>
@@ -73,7 +95,7 @@ export default async function HomePage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {collections.map(item => (
+            {collections.map((item) => (
               <CollectionCard key={item.path} item={item} />
             ))}
           </div>

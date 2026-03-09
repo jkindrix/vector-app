@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getTree } from '@/lib/content';
 import { logger } from '@/lib/logger';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const tree = await getTree();

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import 'highlight.js/styles/github.css';
+import { ShortcutsModal } from '@/components/ShortcutsModal';
 
 export const metadata: Metadata = {
   title: {
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         {children}
+        <ShortcutsModal />
       </body>
     </html>
   );

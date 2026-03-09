@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
 
@@ -14,6 +14,7 @@ interface SearchResult {
 
 export function SearchPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialQuery = searchParams.get('q') || '';
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -21,14 +22,39 @@ export function SearchPageContent() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const limit = 20;
+  const urlUpdateRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync URL with search query (debounced)
+  useEffect(() => {
+    if (urlUpdateRef.current) clearTimeout(urlUpdateRef.current);
+    urlUpdateRef.current = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (query.trim()) params.set('q', query.trim());
+      const url = params.toString() ? `?${params.toString()}` : '/search';
+      router.replace(url, { scroll: false });
+    }, 300);
+    return () => {
+      if (urlUpdateRef.current) clearTimeout(urlUpdateRef.current);
+    };
+  }, [query, router]);
 
   useEffect(() => {
-    if (!query.trim()) { setResults([]); setTotal(0); return; }
+    if (!query.trim()) {
+      setResults([]);
+      setTotal(0);
+      return;
+    }
     setLoading(true);
     fetch(`/api/search?q=${encodeURIComponent(query.trim())}&limit=${limit}&offset=${page * limit}`)
-      .then(r => r.json())
-      .then(data => { setResults(data.results || []); setTotal(data.total || 0); })
-      .catch(() => { setResults([]); setTotal(0); })
+      .then((r) => r.json())
+      .then((data) => {
+        setResults(data.results || []);
+        setTotal(data.total || 0);
+      })
+      .catch(() => {
+        setResults([]);
+        setTotal(0);
+      })
       .finally(() => setLoading(false));
   }, [query, page]);
 
@@ -40,7 +66,10 @@ export function SearchPageContent() {
         <input
           type="text"
           value={query}
-          onChange={e => { setQuery(e.target.value); setPage(0); }}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setPage(0);
+          }}
           placeholder="Search documents..."
           className="w-full py-3 px-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
           autoFocus
@@ -63,7 +92,7 @@ export function SearchPageContent() {
             {total} result{total !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
           </p>
           <div className="space-y-4">
-            {results.map(result => (
+            {results.map((result) => (
               <Link
                 key={result.file_path}
                 href={'/' + result.file_path.replace(/\.md$/, '')}
@@ -76,7 +105,10 @@ export function SearchPageContent() {
                   </span>
                 )}
                 {result.snippet && (
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-2" dangerouslySetInnerHTML={{ __html: result.snippet }} />
+                  <p
+                    className="text-sm text-gray-600 dark:text-gray-300 mt-2"
+                    dangerouslySetInnerHTML={{ __html: result.snippet }}
+                  />
                 )}
               </Link>
             ))}
@@ -85,16 +117,16 @@ export function SearchPageContent() {
           {total > limit && (
             <div className="flex justify-center gap-4 mt-8">
               <button
-                onClick={() => setPage(p => Math.max(0, p - 1))}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="px-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded disabled:opacity-50"
+                className="px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded disabled:opacity-50 min-h-[44px]"
               >
                 Previous
               </button>
               <button
-                onClick={() => setPage(p => p + 1)}
+                onClick={() => setPage((p) => p + 1)}
                 disabled={(page + 1) * limit >= total}
-                className="px-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded disabled:opacity-50"
+                className="px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded disabled:opacity-50 min-h-[44px]"
               >
                 Next
               </button>

@@ -18,15 +18,20 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<Element | null>(null);
   const router = useRouter();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (open) {
+      triggerRef.current = document.activeElement;
       setQuery('');
       setResults([]);
       setActiveIndex(0);
       requestAnimationFrame(() => inputRef.current?.focus());
+    } else if (triggerRef.current instanceof HTMLElement) {
+      triggerRef.current.focus();
+      triggerRef.current = null;
     }
   }, [open]);
 
@@ -52,15 +57,21 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
   }, [open]);
 
   const doSearch = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); return; }
+    if (!q.trim()) {
+      setResults([]);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}&limit=8`);
       const data = await res.json();
       setResults(data.results || []);
       setActiveIndex(0);
-    } catch { setResults([]); }
-    finally { setLoading(false); }
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const handleChange = (value: string) => {
@@ -76,10 +87,16 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIndex(i => Math.min(i + 1, results.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIndex(i => Math.max(i - 1, 0)); }
-    else if (e.key === 'Enter' && results[activeIndex]) { e.preventDefault(); navigateToResult(results[activeIndex]); }
-    else if (e.key === 'Escape') onClose();
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((i) => Math.min(i + 1, results.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter' && results[activeIndex]) {
+      e.preventDefault();
+      navigateToResult(results[activeIndex]);
+    } else if (e.key === 'Escape') onClose();
   };
 
   if (!open) return null;
@@ -88,14 +105,17 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Search">
       <div className="fixed inset-0 bg-black/40" onClick={onClose} />
       <div className="fixed top-[15%] left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full max-w-lg">
-        <div ref={modalRef} className="bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div
+          ref={modalRef}
+          className="bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+        >
           <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4">
             <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
             <input
               ref={inputRef}
               type="text"
               value={query}
-              onChange={e => handleChange(e.target.value)}
+              onChange={(e) => handleChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search documents..."
               className="w-full py-3 px-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:outline-none"
@@ -105,7 +125,9 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
               aria-controls="search-results"
               aria-autocomplete="list"
             />
-            <kbd className="hidden sm:inline-block text-xs text-gray-400 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5">esc</kbd>
+            <kbd className="hidden sm:inline-block text-xs text-gray-400 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5">
+              esc
+            </kbd>
           </div>
 
           <div id="search-results" role="listbox" aria-live="polite" className="max-h-80 overflow-y-auto">
@@ -115,28 +137,33 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
               </div>
             )}
             {!loading && query.trim() && results.length === 0 && (
-              <p className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">No results for &ldquo;{query}&rdquo;</p>
+              <p className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+                No results for &ldquo;{query}&rdquo;
+              </p>
             )}
-            {!loading && results.map((result, i) => (
-              <button
-                key={result.file_path}
-                role="option"
-                aria-selected={i === activeIndex}
-                onClick={() => navigateToResult(result)}
-                onMouseEnter={() => setActiveIndex(i)}
-                className={`w-full text-left px-4 py-3 flex flex-col transition-colors ${i === activeIndex ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
-              >
-                <span className="text-sm font-medium text-gray-900 dark:text-white">{result.title}</span>
-                <span className="flex items-center gap-2 mt-0.5">
-                  {result.collection && (
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">{result.collection}</span>
-                  )}
-                  {result.snippet && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{result.snippet}</span>
-                  )}
-                </span>
-              </button>
-            ))}
+            {!loading &&
+              results.map((result, i) => (
+                <button
+                  key={result.file_path}
+                  role="option"
+                  aria-selected={i === activeIndex}
+                  onClick={() => navigateToResult(result)}
+                  onMouseEnter={() => setActiveIndex(i)}
+                  className={`w-full text-left px-4 py-3 flex flex-col transition-colors ${i === activeIndex ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                >
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">{result.title}</span>
+                  <span className="flex items-center gap-2 mt-0.5">
+                    {result.collection && (
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                        {result.collection}
+                      </span>
+                    )}
+                    {result.snippet && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{result.snippet}</span>
+                    )}
+                  </span>
+                </button>
+              ))}
           </div>
 
           {!loading && query.trim() && results.length > 0 && (
@@ -149,7 +176,10 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
                 to open
               </span>
               <button
-                onClick={() => { onClose(); router.push(`/search?q=${encodeURIComponent(query)}`); }}
+                onClick={() => {
+                  onClose();
+                  router.push(`/search?q=${encodeURIComponent(query)}`);
+                }}
                 className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
               >
                 View all results
