@@ -127,7 +127,7 @@ code {
   @apply bg-gray-100 dark:bg-gray-800;
 }
 .prose code {
-  @apply text-blue-600 dark:text-blue-400;
+  @apply text-blue-600 dark:text-blue-400 dark:bg-gray-800;
 }
 .prose h2[id],
 .prose h3[id],
