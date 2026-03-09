@@ -44,12 +44,12 @@ export function DocumentHistory({ filePath }: { filePath: string }) {
       {open && (
         <div className="mt-3">
           {revisions.length === 0 ? (
-            <p className="text-xs text-gray-400 dark:text-gray-500">No revisions recorded yet.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500">No revisions recorded yet.</p>
           ) : (
             <ul className="space-y-2">
               {revisions.map((rev) => (
                 <li key={rev.id} className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-3">
-                  <time className="shrink-0">
+                  <time dateTime={rev.created_at} className="shrink-0">
                     {new Date(rev.created_at).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -57,7 +57,7 @@ export function DocumentHistory({ filePath }: { filePath: string }) {
                     })}{' '}
                     {new Date(rev.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                   </time>
-                  {rev.edited_by && <span className="text-gray-400 dark:text-gray-500">by {rev.edited_by}</span>}
+                  {rev.edited_by && <span className="text-gray-500 dark:text-gray-500">by {rev.edited_by}</span>}
                 </li>
               ))}
             </ul>

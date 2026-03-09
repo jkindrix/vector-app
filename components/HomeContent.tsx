@@ -41,18 +41,18 @@ function CollectionCard({ item }: { item: CollectionSummary }) {
                 </p>
               )}
               {(item.documentCount || item.lastModified) && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                   {item.documentCount && item.documentCount > 1 && <span>{item.documentCount} documents</span>}
                   {item.documentCount && item.documentCount > 1 && item.lastModified && <span> &middot; </span>}
                   {item.lastModified && (
-                    <span>
+                    <time dateTime={item.lastModified}>
                       Updated{' '}
                       {new Date(item.lastModified).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',
                       })}
-                    </span>
+                    </time>
                   )}
                 </p>
               )}
@@ -90,7 +90,7 @@ export function HomeContent({
     <>
       {collections.length > 3 && (
         <div className="relative mb-8">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
             value={filter}
@@ -127,7 +127,7 @@ export function HomeContent({
       {recentDocs.length > 0 && !filter && (
         <section className="mt-12">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            <Clock className="w-5 h-5 text-gray-400" />
+            <Clock className="w-5 h-5 text-gray-500" />
             Recently Updated
           </h2>
           <div className="space-y-1">
@@ -138,17 +138,17 @@ export function HomeContent({
                 className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors group"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                  <FileText className="w-4 h-4 text-gray-500 shrink-0" />
                   <span className="text-sm text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {doc.displayName}
                   </span>
                   {doc.collection && (
-                    <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{doc.collection}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-500 shrink-0">{doc.collection}</span>
                   )}
                 </div>
-                <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 ml-4">
+                <time dateTime={doc.lastModified} className="text-xs text-gray-500 dark:text-gray-500 shrink-0 ml-4">
                   {formatDate(doc.lastModified)}
-                </span>
+                </time>
               </Link>
             ))}
           </div>

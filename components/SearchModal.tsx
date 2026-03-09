@@ -110,7 +110,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
           className="bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
           <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4">
-            <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <Search className="w-4 h-4 text-gray-500 flex-shrink-0" />
             <input
               ref={inputRef}
               type="text"
@@ -125,7 +125,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
               aria-controls="search-results"
               aria-autocomplete="list"
             />
-            <kbd className="hidden sm:inline-block text-xs text-gray-400 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5">
+            <kbd className="hidden sm:inline-block text-xs text-gray-500 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5">
               esc
             </kbd>
           </div>
@@ -168,7 +168,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
 
           {!loading && query.trim() && results.length > 0 && (
             <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-2 flex justify-between items-center">
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-500">
                 <kbd className="border border-gray-200 dark:border-gray-700 rounded px-1 mr-1">&uarr;</kbd>
                 <kbd className="border border-gray-200 dark:border-gray-700 rounded px-1 mr-1">&darr;</kbd>
                 to navigate

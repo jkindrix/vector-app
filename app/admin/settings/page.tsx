@@ -15,8 +15,16 @@ export default function AdminSettings() {
     e.preventDefault();
     setErrorMessage('');
 
-    if (newPassword.length < 8) { setErrorMessage('New password must be at least 8 characters'); setStatus('error'); return; }
-    if (newPassword !== confirmPassword) { setErrorMessage('Passwords do not match'); setStatus('error'); return; }
+    if (newPassword.length < 8) {
+      setErrorMessage('New password must be at least 8 characters');
+      setStatus('error');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMessage('Passwords do not match');
+      setStatus('error');
+      return;
+    }
 
     try {
       setStatus('saving');
@@ -65,27 +73,52 @@ export default function AdminSettings() {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
             <div className="relative">
-              <input type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)}
+              <input
+                type={showNew ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="Minimum 8 characters" required minLength={8} />
-              <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                placeholder="Minimum 8 characters"
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
+              >
                 {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Confirm New Password
+            </label>
             <div className="relative">
-              <input type={showConfirm ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+              <input
+                type={showConfirm ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="Re-enter new password" required minLength={8} />
-              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                placeholder="Re-enter new password"
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
+              >
                 {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
           </div>
-          <button type="submit" disabled={status === 'saving'}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium">
+          <button
+            type="submit"
+            disabled={status === 'saving'}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium"
+          >
             {status === 'saving' ? 'Changing...' : 'Change Password'}
           </button>
         </form>

@@ -51,7 +51,7 @@ export function ShortcutsModal() {
             <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Keyboard Shortcuts</h2>
             <button
               onClick={() => setOpen(false)}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-sm"
+              className="text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-sm"
             >
               <kbd className="border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 text-xs">esc</kbd>
             </button>
@@ -75,7 +75,7 @@ export function ShortcutsModal() {
             {isAdmin && (
               <>
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Editor</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Editor</p>
                 </div>
                 {adminShortcuts.map((s, i) => (
                   <div key={`admin-${i}`} className="flex items-center justify-between">

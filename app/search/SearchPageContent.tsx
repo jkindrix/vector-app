@@ -62,7 +62,7 @@ export function SearchPageContent() {
     <>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Search</h1>
       <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg px-4 mb-8">
-        <Search className="w-5 h-5 text-gray-400 shrink-0" />
+        <Search className="w-5 h-5 text-gray-500 shrink-0" />
         <input
           type="text"
           value={query}

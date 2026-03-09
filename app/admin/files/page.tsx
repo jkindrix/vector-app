@@ -22,12 +22,12 @@ function TreeItem({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
         style={{ paddingLeft: `${depth * 20 + 8}px` }}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <FileText className="w-4 h-4 text-gray-500 flex-shrink-0" />
           <span className="text-sm text-gray-900 dark:text-white truncate">{node.displayName}</span>
         </div>
         <Link
           href={`/admin/edit/${node.path}`}
-          className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-shrink-0"
+          className="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-shrink-0"
           aria-label={`Edit ${node.displayName}`}
         >
           <Edit className="w-4 h-4" />
@@ -46,9 +46,9 @@ function TreeItem({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
         style={{ paddingLeft: `${depth * 20 + 8}px` }}
       >
         {expanded ? (
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-gray-500" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <ChevronRight className="w-4 h-4 text-gray-500" />
         )}
         <Folder className="w-4 h-4 text-blue-500" />
         <span className="text-sm font-medium text-gray-900 dark:text-white">{node.displayName}</span>

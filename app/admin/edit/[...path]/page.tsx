@@ -271,32 +271,32 @@ export default function AdminEditor() {
       <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 lg:px-6">
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-3 min-w-0">
-            <Link href="/admin/files" className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+            <Link href="/admin/files" className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <span className="text-sm font-mono text-gray-500 dark:text-gray-400 truncate">{path}</span>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {dirty && <span className="text-xs text-amber-500">Unsaved changes</span>}
-            {!dirty && lastSaved && <span className="text-xs text-gray-400">Saved {lastSaved}</span>}
+            {!dirty && lastSaved && <span className="text-xs text-gray-500">Saved {lastSaved}</span>}
             <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-md">
               <button
                 onClick={() => setViewMode('edit')}
-                className={`p-2 rounded-l-md transition-colors ${viewMode === 'edit' ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-400'}`}
+                className={`p-2 rounded-l-md transition-colors ${viewMode === 'edit' ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-500'}`}
                 title="Edit"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('split')}
-                className={`p-2 border-x border-gray-200 dark:border-gray-700 transition-colors hidden lg:block ${viewMode === 'split' ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-400'}`}
+                className={`p-2 border-x border-gray-200 dark:border-gray-700 transition-colors hidden lg:block ${viewMode === 'split' ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-500'}`}
                 title="Split"
               >
                 <Columns className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('preview')}
-                className={`p-2 rounded-r-md transition-colors ${viewMode === 'preview' ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-400'}`}
+                className={`p-2 rounded-r-md transition-colors ${viewMode === 'preview' ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-500'}`}
                 title="Preview"
               >
                 <Eye className="w-4 h-4" />
