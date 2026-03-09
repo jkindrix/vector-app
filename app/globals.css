@@ -74,28 +74,6 @@ code {
   }
 }
 
-/* KaTeX font-display override */
-@font-face {
-  font-family: 'KaTeX_Main';
-  font-display: swap;
-}
-@font-face {
-  font-family: 'KaTeX_Math';
-  font-display: swap;
-}
-@font-face {
-  font-family: 'KaTeX_AMS';
-  font-display: swap;
-}
-@font-face {
-  font-family: 'KaTeX_Size1';
-  font-display: swap;
-}
-@font-face {
-  font-family: 'KaTeX_Size2';
-  font-display: swap;
-}
-
 /* Math rendering */
 .katex-display {
   overflow-x: auto;
