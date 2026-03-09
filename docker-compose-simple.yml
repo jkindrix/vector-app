@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  app:
+    image: nginx:alpine
+    container_name: vector-simple
+    restart: unless-stopped
+    networks:
+      - web
+    volumes:
+      - ./build:/usr/share/nginx/html:ro
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      - traefik.http.routers.vector.rule=Host(`vector.jdok.dev`)
+      - traefik.http.routers.vector.entrypoints=websecure
+      - traefik.http.routers.vector.tls=true
+      - traefik.http.routers.vector.tls.certresolver=cloudflare
+      - traefik.http.services.vector.loadbalancer.server.port=80
+
+networks:
+  web:
+    external: true

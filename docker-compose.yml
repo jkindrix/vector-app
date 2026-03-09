@@ -1,0 +1,114 @@
+version: '3.8'
+
+x-default-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: vector-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vector_db
+      POSTGRES_USER: vector_user
+      POSTGRES_PASSWORD: ${VECTOR_DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vector_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  vector-app:
+    build: .
+    container_name: vector-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+    networks:
+      - web
+      - database
+    
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - FRONTEND_PORT=3000
+      - FRONTEND_URL=https://vector.jdok.dev
+      - REACT_APP_API_URL=https://vector.jdok.dev/api
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=vector_db
+      - DB_USER=vector_user
+      - DB_PASSWORD=${VECTOR_DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - CONTENT_DIR=/app/content
+    
+    volumes:
+      - ./data:/app/data:rw
+      - ./content:/app/content:rw
+      - ./logs:/app/logs:rw
+    
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      
+      # Frontend routing (nginx on port 3000)
+      - "traefik.http.routers.vector-frontend.rule=Host(`vector.jdok.dev`)"
+      - "traefik.http.routers.vector-frontend.entrypoints=websecure"
+      - "traefik.http.routers.vector-frontend.tls=true"
+      - "traefik.http.routers.vector-frontend.tls.certresolver=cloudflare"
+      - "traefik.http.routers.vector-frontend.service=vector-frontend"
+      - "traefik.http.services.vector-frontend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.vector-frontend.priority=5"
+      
+      # API routing (Node.js on port 3001)
+      - "traefik.http.routers.vector-api.rule=Host(`vector.jdok.dev`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.vector-api.entrypoints=websecure"
+      - "traefik.http.routers.vector-api.tls=true"
+      - "traefik.http.routers.vector-api.tls.certresolver=cloudflare"
+      - "traefik.http.routers.vector-api.service=vector-api"
+      - "traefik.http.services.vector-api.loadbalancer.server.port=3001"
+      - "traefik.http.routers.vector-api.priority=10"
+      
+      # Monitoring labels
+      - "prometheus.io/scrape=true"
+      - "prometheus.io/port=3001"
+      - "prometheus.io/path=/metrics"
+    
+    # Resource limits (using medium tier for production app)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # Health check using curl (now installed in Dockerfile)
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:3000/health || curl -f http://localhost:3001/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    logging: *default-logging
+
+networks:
+  web:
+    external: true
+  database:
+    external: true
+
+volumes:
+  postgres_data:
