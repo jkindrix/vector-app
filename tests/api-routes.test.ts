@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('../lib/database', () => ({
   ensureInitialized: vi.fn().mockResolvedValue(undefined),
   searchContent: vi.fn().mockResolvedValue({ results: [], total: 0 }),
+  logSearch: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../lib/content', () => ({

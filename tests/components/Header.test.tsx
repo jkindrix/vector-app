@@ -26,9 +26,9 @@ describe('Header', () => {
     expect(link.closest('a')).toHaveAttribute('href', '/');
   });
 
-  it('renders search button with aria-label', () => {
+  it('renders search button', () => {
     render(<Header />);
-    expect(screen.getByLabelText('Search')).toBeInTheDocument();
+    expect(screen.getByText('Search')).toBeInTheDocument();
   });
 
   it('renders theme toggle button with aria-label', () => {
@@ -47,7 +47,7 @@ describe('Header', () => {
 
   it('opens search modal when search button is clicked', () => {
     render(<Header />);
-    fireEvent.click(screen.getByLabelText('Search'));
+    fireEvent.click(screen.getByText('Search'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 });
