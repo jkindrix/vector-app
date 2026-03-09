@@ -9,6 +9,11 @@ node_modules/
 # Production builds
 /build
 /server/dist
+/.next/
+/out/
+
+# Next.js
+next-env.d.ts
 
 # Environment
 .env
