@@ -46,10 +46,9 @@ export function Header() {
             <button
               onClick={() => setSearchOpen(true)}
               className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-              aria-label="Search"
             >
-              <Search size={16} />
-              <span className="hidden sm:inline">Search</span>
+              <Search size={16} aria-hidden="true" />
+              <span className="sr-only sm:not-sr-only">Search</span>
               <kbd className="hidden sm:inline-block text-xs text-gray-400 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5">
                 {isMac ? '⌘' : 'Ctrl+'}K
               </kbd>
