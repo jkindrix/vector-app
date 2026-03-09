@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import 'highlight.js/styles/github.css';
-import 'katex/dist/katex.min.css';
 
 export const metadata: Metadata = {
   title: {
@@ -14,17 +13,21 @@ export const metadata: Metadata = {
     siteName: 'Vector',
     locale: 'en_US',
   },
+  twitter: {
+    card: 'summary',
+  },
   robots: {
     index: true,
     follow: true,
   },
+  alternates: {
+    types: {
+      'application/rss+xml': '/feed.xml',
+    },
+  },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -41,6 +44,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-white dark:bg-gray-950">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded"
+        >
+          Skip to content
+        </a>
         {children}
       </body>
     </html>

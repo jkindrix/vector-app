@@ -1,8 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getContent, getTree } from '@/lib/content';
+import { getContent, getTree, getAllFiles } from '@/lib/content';
 import type { TreeNode } from '@/lib/content';
+
+export const revalidate = 60; // ISR: revalidate every 60 seconds
+
+export async function generateStaticParams() {
+  const files = await getAllFiles();
+  return files.map((f) => ({
+    path: f.replace(/\.md$/, '').split('/'),
+  }));
+}
 import { Header } from '@/components/Header';
 import { MarkdownContent } from '@/components/MarkdownContent';
 import { DocumentSidebar } from '@/components/DocumentSidebar';
@@ -22,7 +31,10 @@ function flattenFiles(node: TreeNode): TreeNode[] {
 }
 
 function stripMarkdown(md: string): string {
-  return md.replace(/[#*_`~\[\]()>!|-]/g, '').replace(/\n+/g, ' ').trim();
+  return md
+    .replace(/[#*_`~\[\]()>!|-]/g, '')
+    .replace(/\n+/g, ' ')
+    .trim();
 }
 
 type Props = {
@@ -59,10 +71,7 @@ export default async function DocumentPage({ params }: Props) {
   const { path } = await params;
   const contentPath = path.join('/');
 
-  const [doc, tree] = await Promise.all([
-    getContent(contentPath),
-    getTree(),
-  ]);
+  const [doc, tree] = await Promise.all([getContent(contentPath), getTree()]);
 
   if (!doc) {
     notFound();
@@ -72,7 +81,7 @@ export default async function DocumentPage({ params }: Props) {
   const collectionTree = getCollectionSubtree(tree, collection);
 
   const siblings = collectionTree ? flattenFiles(collectionTree) : [];
-  const currentIndex = siblings.findIndex(n => n.path === contentPath);
+  const currentIndex = siblings.findIndex((n) => n.path === contentPath);
   const prevDoc = currentIndex > 0 ? siblings[currentIndex - 1] : null;
   const nextDoc = currentIndex >= 0 && currentIndex < siblings.length - 1 ? siblings[currentIndex + 1] : null;
 
@@ -84,7 +93,7 @@ export default async function DocumentPage({ params }: Props) {
     const label = path[i]
       .replace(/\.md$/, '')
       .replace(/[-_]/g, ' ')
-      .replace(/\b\w/g, c => c.toUpperCase());
+      .replace(/\b\w/g, (c) => c.toUpperCase());
     breadcrumbs.push(isLast ? { label } : { label, href: `/${accumulated}` });
   }
 
@@ -105,16 +114,11 @@ export default async function DocumentPage({ params }: Props) {
   return (
     <>
       <Header />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="flex min-h-screen">
-        {collectionTree && (
-          <DocumentSidebar tree={collectionTree} currentPath={contentPath} />
-        )}
+        {collectionTree && <DocumentSidebar tree={collectionTree} currentPath={contentPath} />}
 
-        <main className="flex-1 min-w-0 px-6 py-12 max-w-3xl mx-auto">
+        <main id="main-content" className="flex-1 min-w-0 px-6 py-12 max-w-3xl mx-auto">
           <nav aria-label="Breadcrumb" className="text-sm text-gray-500 dark:text-gray-400 mb-8 flex flex-wrap gap-1">
             {breadcrumbs.map((crumb, i) => (
               <span key={i}>
@@ -131,9 +135,7 @@ export default async function DocumentPage({ params }: Props) {
           </nav>
 
           <header className="mb-10">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">
-              {doc.title}
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">{doc.title}</h1>
             {doc.lastModified && (
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 Last modified {formatDate(doc.lastModified)}
@@ -149,12 +151,16 @@ export default async function DocumentPage({ params }: Props) {
                 <Link href={`/${prevDoc.path}`} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
                   &larr; {prevDoc.displayName}
                 </Link>
-              ) : <span />}
+              ) : (
+                <span />
+              )}
               {nextDoc ? (
                 <Link href={`/${nextDoc.path}`} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
                   {nextDoc.displayName} &rarr;
                 </Link>
-              ) : <span />}
+              ) : (
+                <span />
+              )}
             </nav>
           )}
         </main>

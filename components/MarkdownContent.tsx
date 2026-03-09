@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
+import 'katex/dist/katex.min.css';
 import { CopyButton } from './CopyButton';
 import { TableOfContents, extractHeadings, slugify } from './TableOfContents';
 import { useScrollSpy } from './useScrollSpy';
@@ -14,25 +15,41 @@ function extractTextContent(node: React.ReactNode): string {
   if (typeof node === 'string') return node;
   if (Array.isArray(node)) return node.map(extractTextContent).join('');
   if (node && typeof node === 'object' && 'props' in node) {
-    return extractTextContent((node as React.ReactElement).props.children);
+    return extractTextContent((node as React.ReactElement<{ children?: React.ReactNode }>).props.children);
   }
   return '';
 }
 
 export function MarkdownContent({ markdown }: { markdown: string }) {
   const headings = useMemo(() => extractHeadings(markdown), [markdown]);
-  const headingIds = useMemo(() => headings.map(h => h.id), [headings]);
+  const headingIds = useMemo(() => headings.map((h) => h.id), [headings]);
   const activeId = useScrollSpy(headingIds);
   const [tocOpen, setTocOpen] = useState(false);
 
   const components = useMemo<Components>(() => {
     function makeId(children: React.ReactNode): string {
-      return slugify(extractTextContent(children).replace(/[#*_`~\[\]()>!]/g, '').trim());
+      return slugify(
+        extractTextContent(children)
+          .replace(/[#*_`~\[\]()>!]/g, '')
+          .trim(),
+      );
     }
     return {
-      h2: ({ children, ...props }) => <h2 id={makeId(children)} {...props}>{children}</h2>,
-      h3: ({ children, ...props }) => <h3 id={makeId(children)} {...props}>{children}</h3>,
-      h4: ({ children, ...props }) => <h4 id={makeId(children)} {...props}>{children}</h4>,
+      h2: ({ children, ...props }) => (
+        <h2 id={makeId(children)} {...props}>
+          {children}
+        </h2>
+      ),
+      h3: ({ children, ...props }) => (
+        <h3 id={makeId(children)} {...props}>
+          {children}
+        </h3>
+      ),
+      h4: ({ children, ...props }) => (
+        <h4 id={makeId(children)} {...props}>
+          {children}
+        </h4>
+      ),
       pre: ({ children, ...props }) => {
         const code = extractTextContent(children);
         return (
@@ -56,7 +73,12 @@ export function MarkdownContent({ markdown }: { markdown: string }) {
               className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 w-full hover:bg-gray-50 dark:hover:bg-gray-800"
               aria-expanded={tocOpen}
             >
-              <svg className={`w-4 h-4 transition-transform ${tocOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className={`w-4 h-4 transition-transform ${tocOpen ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
               On this page

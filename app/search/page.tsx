@@ -12,7 +12,7 @@ export default function SearchPage() {
   return (
     <>
       <Header />
-      <main className="max-w-3xl mx-auto px-6 py-12">
+      <main id="main-content" className="max-w-3xl mx-auto px-6 py-12">
         <Suspense fallback={<div className="text-zinc-400">Loading...</div>}>
           <SearchPageContent />
         </Suspense>
