@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { SearchPageContent } from './SearchPageContent';
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function SearchPage() {
           <SearchPageContent />
         </Suspense>
       </main>
+      <Footer />
     </>
   );
 }

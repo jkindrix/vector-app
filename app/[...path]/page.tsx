@@ -13,13 +13,24 @@ export async function generateStaticParams() {
     path: f.replace(/\.md$/, '').split('/'),
   }));
 }
+import dynamic from 'next/dynamic';
 import { Header } from '@/components/Header';
-import { MarkdownContent } from '@/components/MarkdownContent';
+const MarkdownContent = dynamic(() => import('@/components/MarkdownContent').then((m) => m.MarkdownContent), {
+  loading: () => (
+    <div className="animate-pulse space-y-4">
+      <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />
+      <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
+      <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-5/6" />
+    </div>
+  ),
+});
 import { DocumentSidebar } from '@/components/DocumentSidebar';
+import { Footer } from '@/components/Footer';
 import { ReadingProgress } from '@/components/ReadingProgress';
 import { DocumentHistory } from '@/components/DocumentHistory';
 import { PageViewTracker } from '@/components/PageViewTracker';
 import { FeedbackWidget } from '@/components/FeedbackWidget';
+import { CollectionDocList } from '@/components/CollectionDocList';
 
 function getCollectionSubtree(tree: TreeNode, collection: string): TreeNode | null {
   if (tree.children) {
@@ -122,15 +133,28 @@ export default async function DocumentPage({ params }: Props) {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://vector.jdok.dev';
+
   // JSON-LD structured data
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: doc.title,
     description: stripMarkdown(doc.markdown).slice(0, 160),
-    url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://vector.jdok.dev'}/${contentPath}`,
+    url: `${baseUrl}/${contentPath}`,
     ...(doc.lastModified && { dateModified: doc.lastModified }),
     publisher: { '@type': 'Organization', name: 'Vector' },
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbs.map((crumb, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: crumb.label,
+      ...(crumb.href && { item: `${baseUrl}${crumb.href}` }),
+    })),
   };
 
   return (
@@ -139,6 +163,7 @@ export default async function DocumentPage({ params }: Props) {
       <ReadingProgress />
       <PageViewTracker path={contentPath} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <div className="flex min-h-screen">
         {collectionTree && <DocumentSidebar tree={collectionTree} currentPath={contentPath} />}
 
@@ -163,16 +188,31 @@ export default async function DocumentPage({ params }: Props) {
 
           <header className="mb-10">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3 leading-tight">{doc.title}</h1>
-            {doc.lastModified && (
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Last modified {formatDate(doc.lastModified)}
-              </div>
-            )}
+            <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+              {doc.lastModified && (
+                <time dateTime={doc.lastModified}>Last modified {formatDate(doc.lastModified)}</time>
+              )}
+              {doc.lastModified && <span>&middot;</span>}
+              <span>{Math.max(1, Math.round(doc.markdown.split(/\s+/).length / 230))} min read</span>
+            </div>
           </header>
 
           <MarkdownContent markdown={doc.markdown} />
 
           <FeedbackWidget path={contentPath} />
+
+          {process.env.NEXT_PUBLIC_EDIT_URL && (
+            <div className="mt-8">
+              <a
+                href={`${process.env.NEXT_PUBLIC_EDIT_URL}/${contentPath}.md`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                Edit this page &rarr;
+              </a>
+            </div>
+          )}
 
           <DocumentHistory filePath={contentPath} />
 
@@ -255,32 +295,21 @@ function CollectionLandingPage({
           )}
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
             {collectionInfo.documentCount} document{collectionInfo.documentCount !== 1 ? 's' : ''}
-            {collectionInfo.lastModified && <> &middot; Last updated {formatDate(collectionInfo.lastModified)}</>}
+            {collectionInfo.lastModified && (
+              <>
+                {' '}
+                &middot;{' '}
+                <time dateTime={collectionInfo.lastModified}>
+                  Last updated {formatDate(collectionInfo.lastModified)}
+                </time>
+              </>
+            )}
           </p>
         </header>
 
-        <div className="space-y-2">
-          {collectionInfo.documents.map((doc) => (
-            <Link
-              key={doc.path}
-              href={`/${doc.path}`}
-              className="group flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 hover:shadow-sm hover:border-gray-300 dark:hover:border-gray-600 transition-all"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <FileText className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                  {doc.displayName}
-                </span>
-              </div>
-              {doc.lastModified && (
-                <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 ml-4">
-                  {formatDate(doc.lastModified)}
-                </span>
-              )}
-            </Link>
-          ))}
-        </div>
+        <CollectionDocList documents={collectionInfo.documents} />
       </main>
+      <Footer />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { listCollections, getRecentlyUpdated } from '@/lib/content';
 import { Header } from '@/components/Header';
 import { HomeContent } from '@/components/HomeContent';
+import { Footer } from '@/components/Footer';
 
 export const revalidate = 60;
 
@@ -30,6 +31,7 @@ export default async function HomePage() {
           <HomeContent collections={collections} recentDocs={recentDocs} />
         )}
       </main>
+      <Footer />
     </>
   );
 }
