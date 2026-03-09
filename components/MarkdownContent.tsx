@@ -6,6 +6,8 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github.css';
+import './hljs-dark.css';
 import 'katex/dist/katex.min.css';
 import { CopyButton } from './CopyButton';
 import { TableOfContents, extractHeadings, slugify } from './TableOfContents';

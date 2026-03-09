@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import 'highlight.js/styles/github.css';
 import { ShortcutsModal } from '@/components/ShortcutsModal';
 
 export const metadata: Metadata = {
@@ -54,7 +53,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js');
+                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    reg.addEventListener('updatefound', function() {
+                      var newWorker = reg.installing;
+                      if (!newWorker) return;
+                      newWorker.addEventListener('statechange', function() {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                          var banner = document.createElement('div');
+                          banner.setAttribute('role', 'alert');
+                          banner.style.cssText = 'position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:9999;background:#2563eb;color:#fff;padding:0.75rem 1.5rem;border-radius:0.5rem;font-size:0.875rem;display:flex;align-items:center;gap:0.75rem;box-shadow:0 4px 12px rgba(0,0,0,0.15)';
+                          banner.innerHTML = 'Updated content available. <button onclick="location.reload()" style="text-decoration:underline;background:none;border:none;color:inherit;cursor:pointer;font:inherit">Refresh</button>';
+                          document.body.appendChild(banner);
+                        }
+                      });
+                    });
+                  });
                 });
               }
             `,

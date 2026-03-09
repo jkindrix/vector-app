@@ -74,45 +74,26 @@ code {
   }
 }
 
-/* Syntax highlighting */
-.dark .hljs {
-  background: #1f2937;
-  color: #e5e7eb;
+/* KaTeX font-display override */
+@font-face {
+  font-family: 'KaTeX_Main';
+  font-display: swap;
 }
-.dark .hljs-keyword,
-.dark .hljs-selector-tag,
-.dark .hljs-literal,
-.dark .hljs-type {
-  color: #ff7b72;
+@font-face {
+  font-family: 'KaTeX_Math';
+  font-display: swap;
 }
-.dark .hljs-string,
-.dark .hljs-addition {
-  color: #a5d6ff;
+@font-face {
+  font-family: 'KaTeX_AMS';
+  font-display: swap;
 }
-.dark .hljs-comment,
-.dark .hljs-quote {
-  color: #8b949e;
+@font-face {
+  font-family: 'KaTeX_Size1';
+  font-display: swap;
 }
-.dark .hljs-number,
-.dark .hljs-attr {
-  color: #79c0ff;
-}
-.dark .hljs-title,
-.dark .hljs-section,
-.dark .hljs-function {
-  color: #d2a8ff;
-}
-.dark .hljs-built_in,
-.dark .hljs-name {
-  color: #ffa657;
-}
-.dark .hljs-variable,
-.dark .hljs-template-variable {
-  color: #ffa657;
-}
-.dark .hljs-deletion {
-  color: #ffdcd7;
-  background: #67060c;
+@font-face {
+  font-family: 'KaTeX_Size2';
+  font-display: swap;
 }
 
 /* Math rendering */
