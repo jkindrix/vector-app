@@ -105,7 +105,7 @@ export function MarkdownContent({ markdown }: { markdown: string }) {
       {/* Desktop ToC */}
       {headings.length > 0 && (
         <aside className="hidden lg:block w-56 shrink-0 pl-8">
-          <div className="sticky top-8">
+          <div className="sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar scrollbar-thin">
             <TableOfContents headings={headings} activeId={activeId} />
           </div>
         </aside>

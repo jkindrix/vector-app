@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { FileText, Settings, LogOut } from 'lucide-react';
+import { FileText, Settings, LogOut, BarChart3 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -21,8 +21,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     fetch('/api/auth/verify')
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         if (data.valid) {
           setUser(data.user);
         } else {
@@ -51,6 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { href: '/admin/files', label: 'Files', icon: FileText },
+    { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
   ];
 
@@ -63,7 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               Vector Admin
             </Link>
             <nav className="flex items-center gap-1">
-              {navItems.map(item => (
+              {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -91,9 +92,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
       </header>
-      <main className="max-w-5xl mx-auto px-6 py-8">
-        {children}
-      </main>
+      <main className="max-w-5xl mx-auto px-6 py-8">{children}</main>
     </div>
   );
 }

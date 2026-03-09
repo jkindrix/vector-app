@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getContent, writeContent, invalidateCache } from '@/lib/content';
-import { indexFile } from '@/lib/database';
+import { indexFile, saveRevision } from '@/lib/database';
 import { getSessionUser } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 
@@ -39,6 +39,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       const segments = contentPath.split('/');
       const collection = segments.length > 1 ? segments[0] : null;
       await indexFile(contentPath, doc.title, doc.markdown, collection);
+      await saveRevision(contentPath, doc.title, markdown, user.username);
     }
 
     return NextResponse.json({ success: true });

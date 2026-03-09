@@ -391,6 +391,41 @@ export async function getCollectionInfo(relativePath: string): Promise<Collectio
   };
 }
 
+export interface RecentDocument {
+  path: string;
+  displayName: string;
+  collection: string | null;
+  lastModified: string;
+}
+
+export async function getRecentlyUpdated(limit = 10): Promise<RecentDocument[]> {
+  const cached = getCached<RecentDocument[]>('recent');
+  if (cached) return cached;
+
+  const allFiles = await getAllFiles();
+  const docs: RecentDocument[] = [];
+
+  for (const file of allFiles) {
+    try {
+      const s = await stat(join(CONTENT_DIR, file));
+      const parts = file.split('/');
+      docs.push({
+        path: file.replace(/\.md$/i, ''),
+        displayName: toDisplayName(basename(file)),
+        collection: parts.length > 1 ? parts[0] : null,
+        lastModified: s.mtime.toISOString(),
+      });
+    } catch {
+      /* skip */
+    }
+  }
+
+  docs.sort((a, b) => b.lastModified.localeCompare(a.lastModified));
+  const result = docs.slice(0, limit);
+  setCache('recent', result);
+  return result;
+}
+
 export async function getAllFiles(): Promise<string[]> {
   const results: string[] = [];
   try {

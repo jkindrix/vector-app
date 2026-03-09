@@ -42,13 +42,16 @@ export function DocumentSidebar({ tree, currentPath }: { tree: TreeNode; current
 
       <aside
         className={`
-          w-64 shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 overflow-y-auto
+          w-64 shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 overflow-y-auto custom-scrollbar scrollbar-thin
           fixed top-0 left-0 h-full z-40 transition-transform
           lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        <Link href="/" className="block text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mb-4">
+        <Link
+          href="/"
+          className="block text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mb-4"
+        >
           &larr; All collections
         </Link>
         <TreeNav node={tree} currentPath={currentPath} />

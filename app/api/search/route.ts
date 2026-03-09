@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchContent } from '@/lib/database';
+import { searchContent, logSearch } from '@/lib/database';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
     const offset = Math.max(parseInt(request.nextUrl.searchParams.get('offset') || '0'), 0);
 
     const results = await searchContent(query, limit, offset);
+    // Log search analytics (fire and forget, don't block response)
+    if (offset === 0) logSearch(query, results.total).catch(() => {});
     return NextResponse.json(results);
   } catch (error) {
     logger.error({ err: error }, 'Error searching');

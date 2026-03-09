@@ -17,6 +17,9 @@ import { Header } from '@/components/Header';
 import { MarkdownContent } from '@/components/MarkdownContent';
 import { DocumentSidebar } from '@/components/DocumentSidebar';
 import { ReadingProgress } from '@/components/ReadingProgress';
+import { DocumentHistory } from '@/components/DocumentHistory';
+import { PageViewTracker } from '@/components/PageViewTracker';
+import { FeedbackWidget } from '@/components/FeedbackWidget';
 
 function getCollectionSubtree(tree: TreeNode, collection: string): TreeNode | null {
   if (tree.children) {
@@ -134,6 +137,7 @@ export default async function DocumentPage({ params }: Props) {
     <>
       <Header />
       <ReadingProgress />
+      <PageViewTracker path={contentPath} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="flex min-h-screen">
         {collectionTree && <DocumentSidebar tree={collectionTree} currentPath={contentPath} />}
@@ -167,6 +171,10 @@ export default async function DocumentPage({ params }: Props) {
           </header>
 
           <MarkdownContent markdown={doc.markdown} />
+
+          <FeedbackWidget path={contentPath} />
+
+          <DocumentHistory filePath={contentPath} />
 
           {(prevDoc || nextDoc) && (
             <nav
