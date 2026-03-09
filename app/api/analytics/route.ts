@@ -8,10 +8,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const daysParam = request.nextUrl.searchParams.get('days');
+  const days = daysParam ? Math.min(Math.max(parseInt(daysParam, 10) || 30, 1), 365) : 30;
+
   const [pageViews, searches, feedback] = await Promise.all([
-    getPageViewCounts(20),
-    getSearchAnalytics(20),
-    getFeedbackStats(20),
+    getPageViewCounts(20, days),
+    getSearchAnalytics(20, days),
+    getFeedbackStats(20, days),
   ]);
 
   return NextResponse.json({ pageViews, searches, feedback });

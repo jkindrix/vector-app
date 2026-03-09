@@ -288,13 +288,13 @@ export async function trackPageView(filePath: string) {
   await getPool().query('INSERT INTO page_views (file_path) VALUES ($1)', [filePath]);
 }
 
-export async function getPageViewCounts(limit = 20): Promise<{ file_path: string; views: number }[]> {
+export async function getPageViewCounts(limit = 20, days = 30): Promise<{ file_path: string; views: number }[]> {
   await ensureInitialized();
   const result = await getPool().query(
     `SELECT file_path, COUNT(*) as views FROM page_views
-     WHERE viewed_at > NOW() - INTERVAL '30 days'
+     WHERE viewed_at > NOW() - MAKE_INTERVAL(days => $2)
      GROUP BY file_path ORDER BY views DESC LIMIT $1`,
-    [limit],
+    [limit, days],
   );
   return result.rows.map((r) => ({ file_path: r.file_path, views: parseInt(r.views) }));
 }
@@ -306,13 +306,16 @@ export async function logSearch(query: string, resultCount: number) {
   await getPool().query('INSERT INTO search_log (query, result_count) VALUES ($1, $2)', [query, resultCount]);
 }
 
-export async function getSearchAnalytics(limit = 20): Promise<{ query: string; count: number; avg_results: number }[]> {
+export async function getSearchAnalytics(
+  limit = 20,
+  days = 30,
+): Promise<{ query: string; count: number; avg_results: number }[]> {
   await ensureInitialized();
   const result = await getPool().query(
     `SELECT query, COUNT(*) as count, ROUND(AVG(result_count)) as avg_results
-     FROM search_log WHERE searched_at > NOW() - INTERVAL '30 days'
+     FROM search_log WHERE searched_at > NOW() - MAKE_INTERVAL(days => $2)
      GROUP BY query ORDER BY count DESC LIMIT $1`,
-    [limit],
+    [limit, days],
   );
   return result.rows.map((r) => ({
     query: r.query,
@@ -348,6 +351,7 @@ export async function saveFeedback(filePath: string, helpful: boolean) {
 
 export async function getFeedbackStats(
   limit = 20,
+  days = 30,
 ): Promise<{ file_path: string; helpful: number; not_helpful: number }[]> {
   await ensureInitialized();
   const result = await getPool().query(
@@ -355,9 +359,9 @@ export async function getFeedbackStats(
        COUNT(*) FILTER (WHERE helpful) as helpful,
        COUNT(*) FILTER (WHERE NOT helpful) as not_helpful
      FROM document_feedback
-     WHERE created_at > NOW() - INTERVAL '30 days'
+     WHERE created_at > NOW() - MAKE_INTERVAL(days => $2)
      GROUP BY file_path ORDER BY (COUNT(*) FILTER (WHERE NOT helpful)) DESC LIMIT $1`,
-    [limit],
+    [limit, days],
   );
   return result.rows.map((r) => ({
     file_path: r.file_path,
