@@ -3,7 +3,7 @@ import { Header } from '@/components/Header';
 import { HomeContent } from '@/components/HomeContent';
 import { Footer } from '@/components/Footer';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   let error: string | null = null;
