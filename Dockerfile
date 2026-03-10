@@ -25,8 +25,9 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Create content directory
-RUN mkdir -p /app/content && chown nextjs:nodejs /app/content
+# Create content directory and fix ISR cache permissions
+RUN mkdir -p /app/content && chown nextjs:nodejs /app/content && \
+    chown -R nextjs:nodejs /app/.next
 
 USER nextjs
 
